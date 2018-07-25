@@ -9,6 +9,7 @@ module Jekyll
       fetch_languages
       @parallel_localization = config.fetch('parallel_localization', true)
       @exclude_from_localization = config.fetch('exclude_from_localization', [])
+      @isolate_post_languages = config.fetch('isolate_post_languages', false)
     end
 
     def fetch_languages
@@ -89,7 +90,7 @@ module Jekyll
     end
 
     # assigns natural permalinks to documents and prioritizes documents with
-    # active_lang languages over others (except for posts)
+    # active_lang languages over others (except for, optionally, posts)
     def coordinate_documents(docs)
       regex = document_url_regex
       approved = {}
@@ -97,8 +98,10 @@ module Jekyll
         lang = doc.data['lang'] || @default_lang
         url = doc.url.gsub(regex, '/')
         doc.data['permalink'] = url
-        # posts are only approved for the active language (no mixing of languages)
-        next if doc.respond_to? :id && lang != @active_lang
+        if @isolate_post_languages
+          # posts are only approved for the active language (no mixing of languages)
+          next if doc.respond_to?(:id) && lang != @active_lang
+        end
         # otherwise use whatever we have, giving priority to the default and active languages
         next if @file_langs[url] == @active_lang
         next if @file_langs[url] == @default_lang && lang != @active_lang
