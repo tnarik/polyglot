@@ -89,7 +89,7 @@ module Jekyll
     end
 
     # assigns natural permalinks to documents and prioritizes documents with
-    # active_lang languages over others
+    # active_lang languages over others (except for posts)
     def coordinate_documents(docs)
       regex = document_url_regex
       approved = {}
@@ -97,6 +97,9 @@ module Jekyll
         lang = doc.data['lang'] || @default_lang
         url = doc.url.gsub(regex, '/')
         doc.data['permalink'] = url
+        # posts are only approved for the active language (no mixing of languages)
+        next if doc.respond_to? :id && lang != @active_lang
+        # otherwise use whatever we have, giving priority to the default and active languages
         next if @file_langs[url] == @active_lang
         next if @file_langs[url] == @default_lang && lang != @active_lang
         approved[url] = doc
@@ -105,7 +108,7 @@ module Jekyll
       approved.values
     end
 
-    # performs any necesarry operations on the documents before rendering them
+    # performs any necessary operations on the documents before rendering them
     def process_documents(docs)
       return if @active_lang == @default_lang
       url = config.fetch('url', false)
