@@ -10,6 +10,8 @@ module Jekyll
       @parallel_localization = config.fetch('parallel_localization', true)
       @exclude_from_localization = config.fetch('exclude_from_localization', [])
       @isolate_post_languages = config.fetch('isolate_post_languages', false)
+      @lang_field = config.fetch('lang_field', 'lang')
+
     end
 
     def fetch_languages
@@ -95,7 +97,7 @@ module Jekyll
       regex = document_url_regex
       approved = {}
       docs.each do |doc|
-        lang = doc.data['lang'] || @default_lang
+        lang = doc.data[@lang_field] || @default_lang
         url = doc.url.gsub(regex, '/')
         doc.data['permalink'] = url
         if @isolate_post_languages
