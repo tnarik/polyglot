@@ -1,7 +1,7 @@
 lib = File.expand_path('../lib/', __FILE__)
 $:.unshift lib unless $:.include?(lib)
 
-require 'jekyll-polyglotter'
+require 'jekyll/polyglotter/version'
 
 Gem::Specification.new do |s|
   s.required_ruby_version = ">= 2.1.0"
