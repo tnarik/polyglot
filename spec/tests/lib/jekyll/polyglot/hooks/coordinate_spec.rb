@@ -1,6 +1,6 @@
 require 'rspec/helper'
 require 'ostruct'
-require_relative '../../../../../../lib/jekyll/polyglot/hooks/coordinate'
+require_relative '../../../../../../lib/jekyll/polyglotter/hooks/coordinate'
 # rubocop:disable BlockLength, LineLength
 describe 'hook_coordinate' do
   before do

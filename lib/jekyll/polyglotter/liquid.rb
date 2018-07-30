@@ -1,5 +1,5 @@
 module Jekyll
-  module Polyglot
+  module Polyglotter
     module Liquid
       require_relative 'liquid/tags/i18n-headers'
     end

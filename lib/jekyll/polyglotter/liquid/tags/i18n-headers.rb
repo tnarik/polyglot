@@ -1,5 +1,5 @@
 module Jekyll
-  module Polyglot
+  module Polyglotter
     module Liquid
       class I18nHeadersTag < ::Liquid::Tag
         def initialize(tag_name, text, tokens)
@@ -28,4 +28,4 @@ module Jekyll
   end
 end
 
-Liquid::Template.register_tag('I18n_Headers', Jekyll::Polyglot::Liquid::I18nHeadersTag)
+Liquid::Template.register_tag('I18n_Headers', Jekyll::Polyglotter::Liquid::I18nHeadersTag)

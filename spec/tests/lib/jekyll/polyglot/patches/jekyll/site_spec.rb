@@ -16,30 +16,14 @@ describe Site do
         'languages'                 => @langs,
         'default_lang'              => @default_lang,
         'exclude_from_localization' => @exclude_from_localization,
-        'source'                    => File.expand_path('./fixtures', __FILE__)
+        'source'                    => fixtures_path
       )
     )
+
     @site.prepare
     @baseurls = ['/polyglot', '/big-brother', '/bas3url2']
     @urls = ['http://localhost:4000', 'https://test.github.io']
-    @document_url_regex = @site.document_url_regex
     @relative_url_regex = @site.relative_url_regex
-  end
-
-  describe @document_url_regex do
-    it 'must match common default urls made by jekyll' do
-      @langs.each do |lang|
-        expect match "/#{lang}/foobar"
-        expect match ".#{lang}/foobar"
-        expect match "foobar.#{lang}/"
-      end
-    end
-    it 'expect not match natural unfortunate urls' do
-      expect(@document_url_regex).to_not match 'people/karen/foobar/'
-      expect(@document_url_regex).to_not match 'verbs/gasp/foobar'
-      expect(@document_url_regex).to_not match 'products/kefr/foobar.html'
-      expect(@document_url_regex).to_not match 'properties/beachside/foo'
-    end
   end
 
   describe @parallel_localization do

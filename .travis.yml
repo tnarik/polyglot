@@ -24,3 +24,9 @@ branches:
     - master
 
 #
+
+deploy:
+  provider: rubygems
+  api_key: $RUBYGEMS_API_KEY
+  gem:
+    master: jekyll-polyglotter

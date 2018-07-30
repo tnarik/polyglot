@@ -1,6 +1,7 @@
 # Ignore docs files
 _gh_pages
 .ruby-version
+.ruby-gemset
 *.gem
 
 # Numerous always-ignore extensions
