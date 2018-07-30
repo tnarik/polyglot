@@ -1,25 +1,26 @@
-:abc: Polyglot
+Polyglotter
 ---
-[![Gem Version](https://badge.fury.io/rb/jekyll-polyglot.svg)](https://badge.fury.io/rb/jekyll-polyglot)
-[![Build Status](https://travis-ci.org/untra/polyglot.svg?branch=master)](https://travis-ci.org/untra/polyglot)
+[![Gem Version](https://badge.fury.io/rb/jekyll-polyglotter.svg)](https://badge.fury.io/rb/jekyll-polyglotter)
+[![Build Status](https://travis-ci.org/tnarik/polyglotter.svg?branch=master)](https://travis-ci.org/tnarik/polyglotter)
 
-__Polyglot__ is a fast, painless, open-source internationalization plugin for [Jekyll](http://jekyllrb.com) blogs. Polyglot is easy to setup and use with any Jekyll project, and it scales to the languages you want to support. With fallback support for missing content, automatic url relativization, and powerful SEO tools, Polyglot allows any multi-language jekyll blog to focus on content without the cruft.
+__Polyglotter__ is a fast, painless, open-source internationalization plugin for [Jekyll](http://jekyllrb.com) blogs, based on [Polyglot](http://polyglot.untra.io/). Polyglotter is as easy (easier) to setup and use with any Jekyll project, and it scales to the languages you want to support. With fallback support for missing content (or language isolation), automatic url relativization, and powerful SEO tools, Polyglot allows any multi-language jekyll blog to focus on content without the cruft.
 
 ## Why?
-Jekyll doesn't provide native support for multi-language blogs. This plugin was modeled after the [jekyll-multiple-languages-plugin](https://github.com/screeninteraction/jekyll-multiple-languages-plugin), whose implementation I liked, but execution I didn't.
+Jekyll doesn't provide native support for multi-language blogs. This plugin was forked from [jekyll-polyglot](https://github.com/untra/polyglot), as it was lacking some features and didn't seem to be maintained.
 
 ## Installation
-Add jekyll-polyglot to your `Gemfile` if you are using Bundler:
+Add jekyll-polyglotter to your `Gemfile` if you are using Bundler:
+
 ```Ruby
 group :jekyll_plugins do
-   gem "jekyll-polyglot"
+   gem "jekyll-polyglotter"
 end
 ```
 
-Or install the gem manually by doing `gem install jekyll-polyglot` and specify the plugin using `_config.yml`:
+Or install the gem manually by doing `gem install jekyll-polyglotter` and specify the plugin using `_config.yml`:
 ```YAML
 plugins:
-  - jekyll-polyglot
+  - jekyll-polyglotter
 ```
 
 ## Configuration
@@ -39,13 +40,14 @@ These configuration preferences indicate
 ## How To Use It
 When adding new posts and pages, add to the YAML front matter:
 ```
-lang: sv
+lang: es
 ```
 or whatever appropriate [I18n language code](https://developer.chrome.com/webstore/i18n)
 the page should build for. And you're done. Ideally, when designing your site, you should
 organize files by their relative urls.
 
-Polyglot works by associating documents with similar permalinks to the `lang` specified in their frontmatter. Files that correspond to similar routes should have identical permalinks. If you don't provide a permalink for a post, ___make sure you are consistent___ with how you place and name corresponding files:
+Polyglotter works by associating documents with similar permalinks to the `lang` specified in their frontmatter. Files that correspond to similar routes should have identical permalinks. If you don't provide a permalink for a post, ___make sure you are consistent___ with how you place and name corresponding files:
+
 ```
 _posts/2010-03-01-salad-recipes-en.md
 _posts/2010-03-01-salad-recipes-sv.md
@@ -65,7 +67,7 @@ In short:
 Lets say you are building your website. You have an `/about/` page written in *english*, *german* and
 *swedish*. You are also supporting a *french* website, but you never designed a *french* version of your `/about/` page!
 
-No worries. Polyglot ensures the sitemap of your *english* site matches your *french* site, matches your *swedish* and *german* sites too. In this case, because you specified a `default_lang` variable in your `_config.yml`, all sites missing their languages' counterparts will fallback to your `default_lang`, so content is preserved across different languages of your site.
+No worries. Polyglotter ensures the sitemap of your *english* site matches your *french* site, matches your *swedish* and *german* sites too. In this case, because you specified a `default_lang` variable in your `_config.yml`, all sites missing their languages' counterparts will fallback to your `default_lang`, so content is preserved across different languages of your site.
 
 #### Relativized Local Urls
 No need to meticulously manage anchor tags to link to your correct language. Polyglot modifies how pages get written to the site so your *french* links keep vistors on your *french* blog.
@@ -137,7 +139,8 @@ This plugin makes modifications to existing Jekyll classes and modules, namely `
 `Jekyll::Site.process` is the entry point for the Jekyll build process. Take care whatever other plugins you use do not also attempt to overwrite this method. You may have problems.
 
 ## Features
-This plugin stands out from other I18n Jekyll plugins.
+This plugin stands out from other I18n Jekyll plugins:
+
 - automatically corrects your relative links, keeping your *french* visitors on your *french* website, even when content has to fallback to the `default_lang`.
 - builds all versions of your website *simultaneously*, allowing big websites to scale efficiently.
 - provides the liquid tag `{{ site.languages }}` to get an array of your I18n strings.
@@ -148,17 +151,14 @@ This plugin stands out from other I18n Jekyll plugins.
 - a creator that will answer all of your questions and issues.
 
 ## SEO Recipes
-Jekyll-polyglot has a few spectacular [Search Engine Optimization techniques](https://untra.github.io/polyglot/seo) to ensure your Jekyll blog gets the most out of it's multilingual audience. Check them out!
-
-### Other Websites Built with Polyglot
-let us know if you make a multilingual blog you want to share:
-* [Polyglot example project website](http://polyglot.untra.io)
-* [LogRhythm Corporate Website](http://logrhythm.com)
-* [All Over Earth](https://allover.earth/)
+Jekyll-polyglotter uses the same few spectacular [Search Engine Optimization techniques](https://untra.github.io/polyglot/seo) as [Polyglot](http://polyglot.untra.io/) to ensure your Jekyll blog gets the most out of it's multilingual audience. Check them out!
 
 ## Compatibility
 Currently supports Jekyll 3.0 .
 Windows users will need to disable parallel_localization on their machines by setting `parallel_localization: false` in the `_config.yml`
 
 ## Copyright
+
+Copyright (c) Tnarik Innael 2018. License: MIT
+
 Copyright (c) Samuel Volin 2017. License: MIT
