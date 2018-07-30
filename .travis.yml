@@ -5,9 +5,9 @@ sudo: false
 
 rvm:
   - &ruby1 2.4.1
-  - &ruby2 2.3.4
+  - &ruby2 2.3.7
   - &ruby3 2.2.7
-  - &ruby4 2.1.10
+  - &ruby4 2.2.0
   - &rhead ruby-head
 
 #
