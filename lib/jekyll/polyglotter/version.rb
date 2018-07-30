@@ -1,5 +1,5 @@
 module Jekyll
   module Polyglotter
-    VERSION = '1.4.0-alpha'.freeze
+    VERSION = '1.4.0'.freeze
   end
 end
