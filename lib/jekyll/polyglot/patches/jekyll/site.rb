@@ -1,7 +1,7 @@
 include Process
 module Jekyll
   class Site
-    attr_reader :default_lang, :languages, :exclude_from_localization, :lang_vars
+    attr_reader :default_lang, :languages, :exclude_from_localization, :lang_vars, :lang_field, :page_lang_vars
     attr_accessor :file_langs, :active_lang
 
     def prepare
@@ -9,7 +9,8 @@ module Jekyll
       fetch_languages
       @parallel_localization = config.fetch('parallel_localization', true)
       @exclude_from_localization = config.fetch('exclude_from_localization', [])
-      @isolate_post_languages = config.fetch('isolate_post_languages', false)
+      @isolate_languages = config.fetch('isolate_languages', false)
+      @all_docs = {}
       @lang_field = config.fetch('lang_field', 'lang')
 
     end
@@ -20,6 +21,7 @@ module Jekyll
       @keep_files += (@languages - [@default_lang])
       @active_lang = @default_lang
       @lang_vars = config.fetch('lang_vars', [])
+      @page_lang_vars = config.fetch('page_lang_vars', [])
     end
 
     alias_method :process_orig, :process
@@ -50,12 +52,36 @@ module Jekyll
       end
     end
 
+
+    # Unified configuration
+    def description
+      if config.fetch('description', '').is_a?(Hash)
+        @description ||= config['description'].has_key?(active_lang)? config['description'][active_lang] : config['description'][@default_lang]
+      else
+        @description ||= config.fetch('description', '')
+      end
+    end
+
+    def title
+      if config.fetch('title', '').is_a?(Hash)
+        @title ||= config['title'].has_key?(active_lang)? config['title'][active_lang] : config['title'][@default_lang]
+      else
+        @title ||= config.fetch('title', '')
+      end
+    end
+
+    # This allows injecting runtime 'config values' (or site.* liquid tags)
     alias_method :site_payload_orig, :site_payload
     def site_payload
       payload = site_payload_orig
       payload['site']['default_lang'] = default_lang
       payload['site']['languages'] = languages
       payload['site']['active_lang'] = active_lang
+      payload['site']['all_docs'] = @all_docs
+
+      payload['site']['description'] = description
+      payload['site']['title'] = title
+
       lang_vars.each do |v|
         payload['site'][v] = active_lang
       end
@@ -91,71 +117,85 @@ module Jekyll
       @exclude = old_exclude
     end
 
-    # assigns natural permalinks to documents and prioritizes documents with
-    # active_lang languages over others (except for, optionally, posts)
+    # assigns natural permalinks to documents and cascades prioritizing documents with
+    # active_lang languages (except for, optionally, posts and HTML pages)
     def coordinate_documents(docs)
-      regex = document_url_regex
       approved = {}
       docs.each do |doc|
         lang = doc.data[@lang_field] || @default_lang
-        url = doc.url.gsub(regex, '/')
-        doc.data['permalink'] = url
-        if @isolate_post_languages
-          # posts are only approved for the active language (no mixing of languages)
-          next if doc.respond_to?(:id) && lang != @active_lang
+        @all_docs[doc.url] ||= []
+        @all_docs[doc.url] << lang
+        @all_docs[doc.url].uniq!
+        @all_docs[doc.url].sort!
+
+        if @isolate_languages
+          # posts/HTML pages are only approved for the active language (no mixing of languages)
+          next if (doc.is_a?(Jekyll::Document) || doc.is_a?(Jekyll::Page) && doc.html? ) && lang != @active_lang
         end
         # otherwise use whatever we have, giving priority to the default and active languages
-        next if @file_langs[url] == @active_lang
-        next if @file_langs[url] == @default_lang && lang != @active_lang
-        approved[url] = doc
-        @file_langs[url] = lang
+        next if @file_langs[doc.url] == @active_lang
+        next if @file_langs[doc.url] == @default_lang && lang != @active_lang
+        approved[doc.url] = doc
+        @file_langs[doc.url] = lang
       end
       approved.values
     end
 
     # performs any necessary operations on the documents before rendering them
     def process_documents(docs)
-      return if @active_lang == @default_lang
-      url = config.fetch('url', false)
-      rel_regex = relative_url_regex
-      abs_regex = absolute_url_regex(url)
-      docs.each do |doc|
-        relativize_urls(doc, rel_regex)
-        if url
-        then relativize_absolute_urls(doc, abs_regex, url)
+      # Inject the language token in the URLs (except for the default language)
+      unless @active_lang == @default_lang
+        url = config.fetch('url', false)
+        rel_regex = relative_url_regex
+        abs_regex = absolute_url_regex(url)
+        docs.each do |doc|
+          relativize_urls(doc, rel_regex)
+          if url
+          then relativize_absolute_urls(doc, abs_regex, url)
+          end
         end
       end
-    end
 
-    # a regex that matches urls or permalinks with i18n prefixes or suffixes
-    # matches /en/foo , .en/foo , foo.en/ and other simmilar default urls
-    # made by jekyll when parsing documents without explicitly set permalinks
-    def document_url_regex
-      regex = ''
-      @languages.each do |lang|
-        regex += "([\/\.]#{lang}[\/\.])|"
+      # Remove the language token for the default languages
+      rel_regex = relative_url_regex([@default_lang])
+      abs_regex = absolute_url_regex(url, [@default_lang])
+      docs.each do |doc|
+        unrelativize_urls(doc, rel_regex)
+        if url
+        then unrelativize_absolute_urls(doc, abs_regex, url)
+        end
       end
-      regex.chomp! '|'
-      %r{#{regex}}
     end
 
     # a regex that matches relative urls in a html document
     # matches href="baseurl/foo/bar-baz" and others like it
     # avoids matching excluded files
-    def relative_url_regex
-      regex = ''
-      (@exclude + @languages).each do |x|
-        regex += "(?!#{x}\/)"
+    def relative_url_regex(langs = [])
+      exclude_regex = ''
+      (@exclude + @languages.reject { |l| langs.include?(l) }).each do |x|
+        exclude_regex += "(?!#{x}\/)"
       end
-      %r{href=\"?#{@baseurl}\/((?:#{regex}[^,'\"\s\/?\.#]+\.?)*(?:\/[^\]\[\)\(\"\'\s]*)?)\"}
+
+      strip_regex = ''
+      langs.each do |x|
+        strip_regex += "(?:#{x}\/)?"
+      end
+
+      %r{href=\"?#{@baseurl}\/#{strip_regex}((?:#{exclude_regex}[^,'\"\s\/?\.#]+\.?)*(?:\/[^\]\[\)\(\"\'\s]*)?)\"}
     end
 
-    def absolute_url_regex(url)
-      regex = ''
-      (@exclude + @languages).each do |x|
-        regex += "(?!#{x}\/)"
+    def absolute_url_regex(url, langs = [])
+      exclude_regex = ''
+      (@exclude + @languages.reject { |l| langs.include?(l) }).each do |x|
+        exclude_regex += "(?!#{x}\/)"
       end
-      %r{href=\"?#{url}#{@baseurl}\/((?:#{regex}[^,'\"\s\/?\.#]+\.?)*(?:\/[^\]\[\)\(\"\'\s]*)?)\"}
+
+      strip_regex = ''
+      langs.each do |x|
+        strip_regex += "(?:#{x}\/)?"
+      end
+
+      %r{href=\"?#{url}#{@baseurl}\/#{strip_regex}((?:#{exclude_regex}[^,'\"\s\/?\.#]+\.?)*(?:\/[^\]\[\)\(\"\'\s]*)?)\"}
     end
 
     def relativize_urls(doc, regex)
@@ -165,5 +205,14 @@ module Jekyll
     def relativize_absolute_urls(doc, regex, url)
       doc.output.gsub!(regex, "href=\"#{url}#{@baseurl}/#{@active_lang}/" + '\1"')
     end
+
+    def unrelativize_urls(doc, regex)
+      doc.output.gsub!(regex, "href=\"#{@baseurl}/" + '\1"')
+    end
+
+    def unrelativize_absolute_urls(doc, regex, url)
+      doc.output.gsub!(regex, "href=\"#{url}#{@baseurl}/" + '\1"')
+    end
+
   end
 end
